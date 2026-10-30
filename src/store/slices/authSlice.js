@@ -37,8 +37,9 @@ export const getMeAsync = createAsyncThunk(
             const res = await getMe();
             return res.data;
         } catch (err) {
-            clearToken();
-            return rejectWithValue(err.response?.data?.message || "Failed to load user");
+            const unauthorized = [401, 403].includes(err.response?.status);
+            if (unauthorized) clearToken();
+            return rejectWithValue(err.response?.data?.message || "Failed to load user", { unauthorized });
         }
     }
 );
@@ -107,11 +108,14 @@ const authSlice = createSlice({
                 state.user = action.payload;
                 state.isAuthenticated = true;
             })
-            .addCase(getMeAsync.rejected, (state) => {
+            .addCase(getMeAsync.rejected, (state, action) => {
                 state.loading = false;
-                state.user = null;
-                state.token = null;
-                state.isAuthenticated = false;
+                state.error = action.payload;
+                if (action.meta.unauthorized) {
+                    state.user = null;
+                    state.token = null;
+                    state.isAuthenticated = false;
+                }
             });
     },
 });

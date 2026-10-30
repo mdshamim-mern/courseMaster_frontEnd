@@ -1,22 +1,98 @@
-const {test}=require('node:test');
-const assert=require('node:assert/strict');
-const path=require('node:path');
-const vm=require('node:vm');
-const {createRequire}=require('node:module');
-const requireProject=createRequire(path.join(__dirname,'../package.json'));
-const {buildSync}=requireProject('esbuild');
-const React=requireProject('react');
-const {renderToStaticMarkup}=requireProject('react-dom/server');
-const {MemoryRouter,Routes,Route}=requireProject('react-router-dom');
-const {Provider}=requireProject('react-redux');
-const {configureStore}=requireProject('@reduxjs/toolkit');
-const sourceRoot=process.env.FRONTEND_SOURCE_ROOT||path.join(__dirname,'..');
-const storage=new Map();
-const localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,String(value)),removeItem:key=>storage.delete(key)};
-function load(file){const result=buildSync({entryPoints:[path.join(sourceRoot,file)],bundle:true,packages:'external',platform:'node',format:'cjs',write:false,jsx:'automatic',define:{'import.meta.env':'{}'}});const module={exports:{}};vm.runInNewContext(result.outputFiles[0].text,{module,exports:module.exports,require:requireProject,localStorage,window:{location:{href:'',pathname:'/courses'}},console,URL,AbortController,Blob,FormData,fetch,TextEncoder,TextDecoder,Buffer,setTimeout,clearTimeout,process},{filename:file});return module.exports;}
-test('Token survives save/read and is removed on logout',()=>{storage.clear();const auth=load('src/utils/auth.js');auth.saveToken('example-token');assert.equal(auth.getToken(),'example-token');auth.clearToken();assert.equal(auth.getToken(),null);});
-test('Enrollment reducer preserves an array response and permits progress updates',()=>{const m=load('src/store/slices/enrollmentSlice.js');let state=m.default(undefined,{type:'init'});state=m.default(state,{type:m.fetchMyEnrollments.fulfilled.type,payload:[{_id:'e1',progress:{percent:0}}]});assert.ok(Array.isArray(state.enrollments));assert.equal(state.enrollments[0]._id,'e1');state=m.default(state,{type:m.completeLessonAsync.fulfilled.type,payload:{_id:'e1',progress:{percent:100}}});assert.equal(state.enrollments[0].progress.percent,100);});
-test('Course details display the stored price without multiplying it',()=>{storage.clear();const course={_id:'course-1',title:'Price Test',description:'Description',price:1234,instructorName:'Instructor',tags:[],syllabus:[],batches:[]};const state={courses:{currentCourse:course,detailLoading:false},enrollment:{enrollments:[],enrolling:false},auth:{user:null,token:null,isAuthenticated:false}};const store=configureStore({reducer:()=>state});const Component=load('src/pages/CousrseDetails/CourseDetails.jsx').default;const html=renderToStaticMarkup(React.createElement(Provider,{store},React.createElement(MemoryRouter,{initialEntries:['/courses/course-1']},React.createElement(Routes,null,React.createElement(Route,{path:'/courses/:id',element:React.createElement(Component)})))));assert.ok(html.includes('৳ '+course.price.toLocaleString()));assert.ok(!html.includes('123400'));});
-test('Course card allows long titles to wrap',()=>{const Component=load('src/components/CourseCard/CourseCard.jsx').default;const html=renderToStaticMarkup(React.createElement(MemoryRouter,null,React.createElement(Component,{course:{_id:'1',title:'A very long course title that must wrap on small screens',price:10,syllabus:[],tags:[]}})));assert.match(html,/break-words/);assert.doesNotMatch(html,/whitespace-nowrap overflow-visible/);});
-test('A local development bypass flag does not render protected content without a token',()=>{storage.clear();storage.set('dev_bypass','true');const Guard=load('src/routes/ProtectedRoute.jsx').default;const html=renderToStaticMarkup(React.createElement(MemoryRouter,null,React.createElement(Guard,null,React.createElement('p',null,'Protected secret'))));assert.ok(!html.includes('Protected secret'));});
-test('API adapter receives Bearer authentication',async()=>{storage.clear();storage.set('token','example-token');const api=load('src/services/api.js').default;let header;await api.get('/example',{adapter:async config=>{header=config.headers.Authorization;return {status:200,statusText:'OK',headers:{},data:{ok:true},config};}});assert.equal(header,'Bearer example-token');});
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const vm = require("node:vm");
+const { createRequire } = require("node:module");
+const requireProject = createRequire(path.join(__dirname, "../package.json"));
+const { buildSync } = requireProject("esbuild");
+const React = requireProject("react");
+const { renderToStaticMarkup } = requireProject("react-dom/server");
+const { MemoryRouter, Routes, Route } = requireProject("react-router-dom");
+const { Provider } = requireProject("react-redux");
+const { configureStore } = requireProject("@reduxjs/toolkit");
+const sourceRoot = process.env.FRONTEND_SOURCE_ROOT || path.join(__dirname, "..");
+const storage = /* @__PURE__ */ new Map();
+const localStorage = { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, String(value)), removeItem: (key) => storage.delete(key) };
+function load(file) {
+  const result = buildSync({ entryPoints: [path.join(sourceRoot, file)], bundle: true, packages: "external", platform: "node", format: "cjs", write: false, jsx: "automatic", define: { "import.meta.env": "{}" } });
+  const module = { exports: {} };
+  vm.runInNewContext(result.outputFiles[0].text, { module, exports: module.exports, require: requireProject, localStorage, window: { location: { href: "", pathname: "/courses" } }, console, URL, AbortController, Blob, FormData, fetch, TextEncoder, TextDecoder, Buffer, setTimeout, clearTimeout, process }, { filename: file });
+  return module.exports;
+}
+test("Token survives save/read and is removed on logout", () => {
+  storage.clear();
+  const auth = load("src/utils/auth.js");
+  auth.saveToken("example-token");
+  assert.equal(auth.getToken(), "example-token");
+  auth.clearToken();
+  assert.equal(auth.getToken(), null);
+});
+test("Enrollment reducer preserves an array response and permits progress updates", () => {
+  const m = load("src/store/slices/enrollmentSlice.js");
+  let state = m.default(void 0, { type: "init" });
+  state = m.default(state, { type: m.fetchMyEnrollments.fulfilled.type, payload: [{ _id: "e1", progress: { percent: 0 } }] });
+  assert.ok(Array.isArray(state.enrollments));
+  assert.equal(state.enrollments[0]._id, "e1");
+  state = m.default(state, { type: m.completeLessonAsync.fulfilled.type, payload: { _id: "e1", progress: { percent: 100 } } });
+  assert.equal(state.enrollments[0].progress.percent, 100);
+});
+test("Course details display the stored price without multiplying it", () => {
+  storage.clear();
+  const course = { _id: "course-1", title: "Price Test", description: "Description", price: 1234, instructorName: "Instructor", tags: [], syllabus: [], batches: [] };
+  const state = { courses: { currentCourse: course, detailLoading: false }, enrollment: { enrollments: [], enrolling: false }, auth: { user: null, token: null, isAuthenticated: false } };
+  const store = configureStore({ reducer: () => state });
+  const Component = load("src/pages/CousrseDetails/CourseDetails.jsx").default;
+  const html = renderToStaticMarkup(React.createElement(Provider, { store }, React.createElement(MemoryRouter, { initialEntries: ["/courses/course-1"] }, React.createElement(Routes, null, React.createElement(Route, { path: "/courses/:id", element: React.createElement(Component) })))));
+  assert.ok(html.includes("\u09F3 " + course.price.toLocaleString()));
+  assert.ok(!html.includes("123400"));
+});
+test("Course card allows long titles to wrap", () => {
+  const Component = load("src/components/CourseCard/CourseCard.jsx").default;
+  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Component, { course: { _id: "1", title: "A very long course title that must wrap on small screens", price: 10, syllabus: [], tags: [] } })));
+  assert.match(html, /break-words/);
+  assert.doesNotMatch(html, /whitespace-nowrap overflow-visible/);
+});
+test("A local development bypass flag does not render protected content without a token", () => {
+  storage.clear();
+  storage.set("dev_bypass", "true");
+  const Guard = load("src/routes/ProtectedRoute.jsx").default;
+  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Guard, null, React.createElement("p", null, "Protected secret"))));
+  assert.ok(!html.includes("Protected secret"));
+});
+test("API adapter receives Bearer authentication", async () => {
+  storage.clear();
+  storage.set("token", "example-token");
+  const api = load("src/services/api.js").default;
+  let header;
+  await api.get("/example", { adapter: async (config) => {
+    header = config.headers.Authorization;
+    return { status: 200, statusText: "OK", headers: {}, data: { ok: true }, config };
+  } });
+  assert.equal(header, "Bearer example-token");
+});
+test("Temporary profile failures preserve the session while 401 clears it", async () => {
+  storage.clear();
+  storage.set("token", "example-token");
+  const axios = requireProject("axios");
+  const previous = axios.defaults.adapter;
+  let status = 503;
+  axios.defaults.adapter = async (config) => {
+    const error = new Error("Simulated profile error");
+    error.config = config;
+    error.response = { status, data: { message: "Simulated profile error" } };
+    throw error;
+  };
+  try {
+    const m = load("src/store/slices/authSlice.js");
+    const store = configureStore({ reducer: m.default });
+    await store.dispatch(m.getMeAsync());
+    assert.equal(storage.get("token"), "example-token");
+    assert.equal(store.getState().token, "example-token");
+    status = 401;
+    await store.dispatch(m.getMeAsync());
+    assert.equal(storage.has("token"), false);
+    assert.equal(store.getState().token, null);
+  } finally {
+    axios.defaults.adapter = previous;
+  }
+});

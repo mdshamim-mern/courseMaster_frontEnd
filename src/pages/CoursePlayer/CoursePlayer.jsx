@@ -199,7 +199,7 @@ export default function CoursePlayer() {
 
                     {lesson?.assignmentPrompt && (
                         <AssignmentSubmission
-                            key={lesson._id}
+                            key={`assignment-${lesson._id}`}
                             courseId={id}
                             lessonId={lesson._id}
                             prompt={lesson.assignmentPrompt}
@@ -210,7 +210,7 @@ export default function CoursePlayer() {
 
                     {lesson?.quiz && lesson.quiz.length > 0 && (
                         <QuizInterface
-                            key={lesson._id}
+                            key={`quiz-${lesson._id}`}
                             quiz={lesson.quiz}
                             courseId={id}
                             lessonId={lesson._id}
@@ -776,7 +776,7 @@ function QuizInterface({ quiz, courseId, lessonId, enrollment, onComplete }) {
                                         >
                                             <input
                                                 type="radio"
-                                                name="quiz-option"
+                                                name={`quiz-${lessonId}-${qIdx}`}
                                                 checked={answers[qIdx] === oIdx}
                                                 onChange={() => {
                                                     if (!loading) {

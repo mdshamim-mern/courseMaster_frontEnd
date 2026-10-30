@@ -28,7 +28,7 @@ This is the frontend application of the CourseMaster platform, built with modern
 1. Clone the repository
 2. Navigate to the frontend directory:
    ```bash
-   cd course-master-frontend
+   cd courseMaster_frontEnd
    ```
 
 3. Install dependencies:
@@ -144,7 +144,7 @@ Use Node.js 20.19+ or 22.12+. Run `npm ci`, copy `.env.example` to `.env`, set `
 
 ### Checks
 
-- `npm test`: frontend behavior checks for token persistence, enrollment state, course pricing, title wrapping, protected rendering, and API request headers.
+- `npm test`: frontend behavior checks for token persistence, enrollment state, course pricing, title wrapping, protected rendering, API request headers, and transient profile failures.
 - `npm run lint`: ESLint checks.
 - `npm run build`: production bundle.
 
@@ -157,3 +157,7 @@ Authentication uses a consistent token storage key and Bearer header. Protected 
 ### Deployment
 
 Build with the deployed backend's API URL in `VITE_API_BASE_URL`; environment variables are read at build time. Use your own host and configure SPA route fallback. The supplied Vercel fallback configuration is retained. No production deployment has been performed.
+
+## Browser interaction verification
+
+Run `npm run test:browser` against the isolated local setup described in the backend [browser support guide](https://github.com/mdshamim-mern/courseMaster_Backend/blob/main/tests/browser-support/README.md). The eight scenarios cover real batch selection, persisted completion buttons, responsive layout at 390 and 1366 pixels, active navigation, independent lesson and quiz state, failed-session recovery, search page resets, and visible course-player failures. A fresh synthetic account is created for each scenario. Screenshots are saved as evidence. External YouTube iframe requests are blocked during layout checks; video playback is outside those checks.

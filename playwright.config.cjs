@@ -1,0 +1,3 @@
+const { defineConfig } = require("@playwright/test");
+const path = require("node:path");
+module.exports = defineConfig({ testDir: "./tests/browser", testMatch: "**/*.spec.cjs", workers: 1, fullyParallel: false, timeout: 12e4, expect: { timeout: 15e3 }, reporter: [["list"]], outputDir: process.env.COURSEMASTER_BROWSER_OUTPUT || path.resolve(__dirname, "../../../outputs/course-master/browser-results"), use: { baseURL: process.env.COURSEMASTER_BROWSER_URL || "http://127.0.0.1:5180", channel: "chrome", headless: true, viewport: { width: 1366, height: 900 }, trace: "retain-on-failure", screenshot: "only-on-failure" } });
