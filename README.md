@@ -56,7 +56,7 @@ Create a `.env` file in the root directory with the following variables (see `.e
 # Backend API Base URL
 VITE_API_BASE_URL=http://localhost:5000/api
 # For production, use your deployed backend URL:
-# VITE_API_BASE_URL=http://localhost:5000/api/api
+# VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
 **Required Variables:**
@@ -122,7 +122,7 @@ The frontend communicates with the backend API. All API endpoints are documented
 - **Quizzes**: `/api/quizzes/submit` (POST), `/api/quizzes/my` (GET), `/api/quizzes/stats` (GET)
 - **Admin**: `/api/admin/courses`, `/api/admin/enrollments`, `/api/admin/assignments`, `/api/admin/analytics`
 
-For complete API documentation with request/response formats, see [courseMaster_Backend/README.md](../courseMaster_Backend/README.md).
+For complete API documentation with request/response formats, see [courseMaster_Backend/README.md](../backend/README.md).
 
 ## Development
 
@@ -135,3 +135,25 @@ For complete API documentation with request/response formats, see [courseMaster_
 The frontend can be deployed to:
 - **Netlify**
 
+
+## Assignment fixes and verification
+
+### Local setup
+
+Use Node.js 20.19+ or 22.12+. Run `npm ci`, copy `.env.example` to `.env`, set `VITE_API_BASE_URL=http://localhost:5000/api`, and start the backend separately. Run `npm run dev` and open `http://localhost:5173`.
+
+### Checks
+
+- `npm test`: frontend behavior checks for token persistence, enrollment state, course pricing, title wrapping, protected rendering, and API request headers.
+- `npm run lint`: ESLint checks.
+- `npm run build`: production bundle.
+
+The regression tests compile real project modules with the esbuild version installed through Vite. No API calls leave the test process. Server-rendered component checks are not a replacement for a full browser layout review.
+
+### Changes
+
+Authentication uses a consistent token storage key and Bearer header. Protected routes require successful verification. Enrollment arrays remain usable after fetching, and course details reload the current user's enrollments. Course prices match the API value. Batch selection sends the actual batch identifier. Course searches apply page resets before requests and ignore stale responses. Course player completion checks lesson IDs, shows errors, and resets per-lesson forms. Video width and course titles adapt to their container.
+
+### Deployment
+
+Build with the deployed backend's API URL in `VITE_API_BASE_URL`; environment variables are read at build time. Use your own host and configure SPA route fallback. The supplied Vercel fallback configuration is retained. No production deployment has been performed.

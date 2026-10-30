@@ -5,7 +5,7 @@ import {
     fetchCourseById,
     clearCurrentCourse,
 } from "../../store/slices/coursesSlice";
-import { enrollCourseAsync, clearSuccess } from "../../store/slices/enrollmentSlice";
+import { enrollCourseAsync, clearSuccess, fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
 import { getMeAsync } from "../../store/slices/authSlice";
 
 export default function CourseDetails() {
@@ -30,6 +30,10 @@ export default function CourseDetails() {
         }
     }, [token, user, dispatch]);
 
+    useEffect(() => {
+        if (token) dispatch(fetchMyEnrollments());
+    }, [token, dispatch]);
+
     const isCreator = user && currentCourse && user._id === currentCourse.instructorId;
     const isAdmin = user && user.role === "admin";
     const cannotEnroll = isAdmin || isCreator;
@@ -41,7 +45,7 @@ export default function CourseDetails() {
         if (!user && token) {
             try {
                 await dispatch(getMeAsync()).unwrap();
-            } catch (err) {
+            } catch {
                 // ignore, will redirect to login below
             }
         }
@@ -53,9 +57,8 @@ export default function CourseDetails() {
 
         if (cannotEnroll) return;
 
-        // Note: Since batches don't have _id in the model, we pass null
-        // The backend can be updated later to handle batch references properly
-        dispatch(enrollCourseAsync({ courseId: id, batchId: selectedBatchId !== null ? selectedBatchId.toString() : null }));
+        const batchId = selectedBatchId === null ? null : currentCourse.batches[selectedBatchId]?._id;
+        dispatch(enrollCourseAsync({ courseId: id, batchId }));
     };
 
     useEffect(() => {
@@ -113,7 +116,7 @@ export default function CourseDetails() {
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text'
-                        }}>৳ {course.price * 100}</p>
+                        }}>৳ {course.price?.toLocaleString()}</p>
 
                         <div>
                             {isAdmin ? (
@@ -256,7 +259,7 @@ export default function CourseDetails() {
                         <h2 className="page-heading-h2 mb-4">Available Batches</h2>
                         <div className="space-y-2">
                             {course.batches.map((batch, idx) => {
-                                // Use index as batch identifier since batches don't have _id
+                                // Keep the selected index in the UI; send the batch ObjectId when enrolling.
                                 const batchIndex = idx;
                                 const isSelected = selectedBatchId === batchIndex;
                                 return (
@@ -285,7 +288,7 @@ export default function CourseDetails() {
                                 );
                             })}
                         </div>
-                        {selectedBatchId && (
+                        {selectedBatchId !== null && (
                             <div className="mt-3 text-sm text-primary">
                                 ✓ Batch selected for enrollment
                             </div>

@@ -21,54 +21,43 @@ export default function CoursesSection() {
     const [category, setCategory] = useState("");
     const [tags, setTags] = useState("");
 
-    const fetchCourses = async () => {
-        try {
+    const [submittedSearch, setSubmittedSearch] = useState("");
+    useEffect(() => {
+        let active = true;
+        const load = async () => {
             setLoading(true);
             setError(null);
+            try {
+                const res = await getCourses({ page, limit, search: submittedSearch || undefined, sort: sort || undefined, category: category || undefined, tags: tags || undefined });
+                if (active) {
+                    setCourses(res.data.courses || []);
+                    setTotalPages(res.data.totalPages || 1);
+                }
+            } catch {
+                if (active) setError("Failed to load courses");
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+        load();
+        return () => { active = false; };
+    }, [page, limit, submittedSearch, sort, category, tags]);
 
-            const params = {
-                page,
-                limit,
-                search: search || undefined,
-                sort: sort || undefined,
-                category: category || undefined,
-                tags: tags || undefined,
-            };
-
-            const res = await getCourses(params);
-            setCourses(res.data.courses || []);
-            setTotalPages(res.data.totalPages || 1);
-        } catch (err) {
-            setError("Failed to load courses");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchCourses();
-        // eslint-disable-next-line
-    }, [page, sort, category, tags]);
-
-    const onSearchSubmit = (e) => {
-        e.preventDefault();
+    const onSearchSubmit = (event) => {
+        event.preventDefault();
         setPage(1);
-        fetchCourses();
+        setSubmittedSearch(search);
     };
-
-    // reset page when filters change
-    useEffect(() => {
-        setPage(1);
-    }, [sort, category, tags]);
+    const updateFilter = (setter) => (value) => { setPage(1); setter(value); };
 
     return (
         <div className="space-y-6">
 
             <CoursesFilters
                 search={search} setSearch={setSearch}
-                sort={sort} setSort={setSort}
-                category={category} setCategory={setCategory}
-                tags={tags} setTags={setTags}
+                sort={sort} setSort={updateFilter(setSort)}
+                category={category} setCategory={updateFilter(setCategory)}
+                tags={tags} setTags={updateFilter(setTags)}
                 onSearchSubmit={onSearchSubmit}
             />
 

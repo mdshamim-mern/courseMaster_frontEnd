@@ -4,42 +4,27 @@ import { getToken } from "../utils/auth";
 import { getMe } from "../services/auth.api";
 
 export default function ProtectedRoute({ children }) {
-  const [isValid, setIsValid] = useState(null);
   const token = getToken();
+  const [retry, setRetry] = useState(0);
+  const [verification, setVerification] = useState(null);
 
   useEffect(() => {
-    // Check if dev bypass is enabled for testing/grading protected routes
-    const isBypass = localStorage.getItem("dev_bypass") === "true" || window.location.search.includes("bypass=true");
-    if (isBypass) {
-      setIsValid(true);
-      return;
-    }
+    if (!token) return;
+    let active = true;
+    getMe().then(() => {
+      if (active) setVerification({ token, retry, valid: true });
+    }).catch((error) => {
+      if (active) setVerification({ token, retry, valid: false, message: error.response?.data?.message || "Unable to verify your session. Please try again." });
+    });
+    return () => { active = false; };
+  }, [token, retry]);
 
-    if (!token) {
-      setIsValid(false);
-      return;
-    }
-
-    // Verify token is valid
-    getMe()
-      .then(() => setIsValid(true))
-      .catch(() => {
-        // Fallback: if token exists but network/server check fails, still allow if token exists
-        setIsValid(!!token);
-      });
-  }, [token]);
-
-  if (isValid === null) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
+  if (!token) return <Navigate to="/login" replace />;
+  if (verification?.token !== token || verification?.retry !== retry) {
+    return <div className="flex items-center justify-center min-h-screen"><span className="loading loading-spinner loading-lg" aria-label="Verifying session"></span></div>;
   }
-
-  if (!isValid) {
-    return <Navigate to="/login" replace />;
+  if (!verification.valid) {
+    return <div className="alert alert-error" role="alert"><span>{verification.message}</span><button className="btn btn-sm" onClick={() => setRetry(value => value + 1)}>Retry</button></div>;
   }
-
   return children;
 }

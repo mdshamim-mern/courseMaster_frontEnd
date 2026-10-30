@@ -9,7 +9,7 @@ export default function EditCourse() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { currentCourse, detailLoading } = useSelector((state) => state.courses);
+    const { detailLoading } = useSelector((state) => state.courses);
     const { creating, error } = useSelector((state) => state.admin);
 
     const [form, setForm] = useState({
@@ -24,25 +24,22 @@ export default function EditCourse() {
     });
 
     useEffect(() => {
-        if (!currentCourse || currentCourse._id !== id) {
-            dispatch(fetchCourseById(id));
-        }
-    }, [dispatch, id, currentCourse]);
-
-    useEffect(() => {
-        if (currentCourse) {
+        let active = true;
+        dispatch(fetchCourseById(id)).unwrap().then((course) => {
+            if (!active) return;
             setForm({
-                title: currentCourse.title || "",
-                description: currentCourse.description || "",
-                instructorName: currentCourse.instructorName || "",
-                price: currentCourse.price || 0,
-                category: currentCourse.category || "",
-                tags: (currentCourse.tags || []).join(", "),
-                batches: currentCourse.batches || [],
-                syllabus: currentCourse.syllabus || [],
+                title: course.title || "",
+                description: course.description || "",
+                instructorName: course.instructorName || "",
+                price: course.price || 0,
+                category: course.category || "",
+                tags: (course.tags || []).join(", "),
+                batches: course.batches || [],
+                syllabus: course.syllabus || [],
             });
-        }
-    }, [currentCourse]);
+        }).catch(() => {});
+        return () => { active = false; };
+    }, [dispatch, id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
