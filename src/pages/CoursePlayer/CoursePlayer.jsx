@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourseById } from "../../store/slices/coursesSlice";
 import { completeLessonAsync, fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
@@ -120,6 +120,30 @@ export default function CoursePlayer() {
         return <div className="alert alert-error">Course not found</div>;
     }
 
+    if (!enrollment || enrollment?.course?._id !== id) {
+        return (
+            <div className="container mx-auto px-4 py-12 max-w-lg text-center">
+                <div className="card bg-base-100 shadow-xl border border-warning">
+                    <div className="card-body items-center text-center">
+                        <div className="text-5xl mb-2">🔒</div>
+                        <h2 className="card-title text-xl font-bold">Enrollment Required</h2>
+                        <p className="text-base-content/70">
+                            You are not enrolled in <strong>{currentCourse.title}</strong>. Please enroll in this course to access the player and watch lessons.
+                        </p>
+                        <div className="card-actions mt-4 flex gap-3">
+                            <Link to={`/courses/${id}`} className="btn btn-primary">
+                                Go to Course Details
+                            </Link>
+                            <Link to="/courses" className="btn btn-outline">
+                                Browse Courses
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const module = currentCourse.syllabus?.[selectedModule];
     const lesson = module?.lessons?.[selectedLesson];
 
@@ -145,7 +169,7 @@ export default function CoursePlayer() {
                         </div>
                     </div>
 
-                    {lesson?.videoUrl && (
+                    {lesson?.videoUrl && enrollment?.course?._id === id && (
                         <div className="card bg-base-100 shadow">
                             <div className="card-body p-3 sm:p-6">
                                 <h3 className="card-title text-base sm:text-lg md:text-xl break-words">{lesson.title}</h3>

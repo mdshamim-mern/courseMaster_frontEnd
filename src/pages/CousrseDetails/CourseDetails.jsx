@@ -197,8 +197,10 @@ export default function CourseDetails() {
                                                     <div className="flex-1">
                                                         <p className="font-medium">{lesson.title}</p>
                                                         <div className="flex flex-wrap gap-2 mt-1">
-                                                            {lesson.videoUrl && (
+                                                            {lesson.videoUrl && alreadyEnrolled ? (
                                                                 <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline">🎬 Watch Video</a>
+                                                            ) : (
+                                                                <span className="text-xs text-base-content/60 flex items-center gap-1">🔒 Enroll to unlock</span>
                                                             )}
                                                             {lesson.liveClassLink && (
                                                                 <div className="flex items-center gap-1">

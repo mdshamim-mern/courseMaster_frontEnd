@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 export default function Footer() {
@@ -17,19 +18,19 @@ export default function Footer() {
                     <h4 className="font-bold mb-4 text-lg gradient-text">Quick Links</h4>
                     <ul className="space-y-2 text-sm">
                         <li>
-                            <a className="link link-hover text-base-content/80 hover:text-primary transition-colors" href="/">
+                            <Link className="link link-hover text-base-content/80 hover:text-primary transition-colors" to="/">
                                 Home
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a className="link link-hover text-base-content/80 hover:text-primary transition-colors" href="/courses">
+                            <Link className="link link-hover text-base-content/80 hover:text-primary transition-colors" to="/courses">
                                 Courses
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a className="link link-hover text-base-content/80 hover:text-primary transition-colors" href="/about">
+                            <Link className="link link-hover text-base-content/80 hover:text-primary transition-colors" to="/about">
                                 About Us
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>
